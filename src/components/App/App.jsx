@@ -6,35 +6,54 @@ import React from 'react';
 import { fetchPhotos } from 'Services/api';
 import { Loader } from 'components/Loader/Loader';
 import { toast } from 'react-toastify';
+import { useState, useEffect } from 'react';
 
-export class App extends React.Component {
-  state = {
-    loading: false,
-    error: null,
-    images: [],
-    page: 1,
-    per_page: 12,
-    q: '',
-    isOpen: false,
-    total: 0,
-    first_load: false,
-    imageModal: null,
-  };
+export const App = () => {
+  // state = {
+  //   loading: false,
+  //   error: null,
+  //   images: [],
+  //   page: 1,
+  //   per_page: 12,
+  //   q: '',
+  //   isOpen: false,
+  //   total: 0,
+  //   imageModal: null,
+  // };
 
-  componentDidMount() {
-    const { per_page, page } = this.state;
-    this.getImages({ per_page, page });
-  }
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [per_page, setPer_page] = useState(12);
+  const [q, setQ] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [imageModal, setImageModal] = useState(null);
 
-  componentDidUpdate(_, prevState) {
-    const { per_page, page, q } = this.state;
-    if (this.state.q !== prevState.q || this.state.page !== prevState.page) {
-      this.getImages({ per_page, page, q });
+  // componentDidMount() {
+  //   const { per_page, page } = this.state;
+  //   this.getImages({ per_page, page });
+  // }
+
+  useEffect(() => {
+    getImages({ per_page, page });
+  }, [per_page, page]);
+
+  // componentDidUpdate(_, prevState) {
+  //   const { per_page, page, q } = this.state;
+  //   if (this.state.q !== prevState.q || this.state.page !== prevState.page) {
+  //     this.getImages({ per_page, page, q });
+  //   }
+  // }
+
+  useEffect(() => {
+    if (!q || !page) {
+      getImages({ per_page, page, q });
     }
-  }
+  }, [per_page, page, q]);
 
-  getImages = async params => {
-    this.setState({ loading: true });
+  const getImages = async params => {
+    setLoading(true);
     try {
       const data = await fetchPhotos(params);
 
@@ -45,67 +64,67 @@ export class App extends React.Component {
           `Sorry, we could not find any images matching your request`
         );
       } else {
-        !this.state.total && toast.success(`We found ${totalHits} images`);
+        !total && toast.success(`We found ${totalHits} images`);
       }
 
-      this.setState(prevState => ({
-        images: [...prevState.images, ...hits],
-        total: totalHits,
-      }));
+      // this.setState(prevState => ({
+      //   images: [...prevState.images, ...hits],
+      // }));
 
-      // this.setState({ loading: false });
+      setImages(prevState => [...prevState, ...hits]);
+      setTotal(totalHits);
     } catch (error) {
       toast.warning(`Oops ${error}`);
     } finally {
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  handleLoarMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const handleLoarMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  handleSubmit = query => {
-    this.setState({
-      q: query,
-      images: [],
-      currentPage: 1,
-      total: 0,
-    });
+  const handleSubmit = query => {
+    // this.setState({
+    //   q: query,
+    //   images: [],
+    //   Page: 1,
+    //   total: 0,
+    // });
+
+    setQ(query);
+    setImages([]);
+    setPage(1);
+    setTotal(0);
   };
 
-  handleOpenModal = largeImageURL => {
-    this.setState(prevState => ({
-      isOpen: !prevState.isOpen,
-      imageModal: largeImageURL,
-    }));
+  const handleOpenModal = largeImageURL => {
+    // this.setState(prevState => ({
+    //   isOpen: !prevState.isOpen,
+    //   imageModal: largeImageURL,
+    // }));
+
+    setIsOpen(prevState => !prevState);
+    setImageModal(largeImageURL);
   };
 
-  render() {
-    const { images, total, loading, imageModal, isOpen, q } = this.state;
-    return (
-      <div>
-        <Searchbar globalQuery={q} onSubmit={this.handleSubmit} />
-        {loading && !images.length ? (
-          <Loader />
-        ) : (
-          <ImageGallery
-            handleOpenModal={this.handleOpenModal}
-            images={images}
-          />
-        )}
+  return (
+    <div>
+      <Searchbar globalQuery={q} onSubmit={handleSubmit} />
+      {loading && !images.length ? (
+        <Loader />
+      ) : (
+        <ImageGallery handleOpenModal={handleOpenModal} images={images} />
+      )}
 
-        {total > images.length && images.length > 0 ? (
-          <Button onClick={this.handleLoarMore} />
-        ) : null}
-        {isOpen ? (
-          <Modal close={this.handleOpenModal}>
-            <img src={imageModal} alt="Large size of your chosen img" />
-          </Modal>
-        ) : null}
-      </div>
-    );
-  }
-}
+      {total > images.length && images.length > 0 ? (
+        <Button onClick={handleLoarMore} />
+      ) : null}
+      {isOpen ? (
+        <Modal close={handleOpenModal}>
+          <img src={imageModal} alt="Large size of your chosen img" />
+        </Modal>
+      ) : null}
+    </div>
+  );
+};

@@ -47,12 +47,13 @@ export const App = () => {
   );
 
   useEffect(() => {
-    if (q) {
+    if (q !== '') {
       getImages({ per_page, page, q });
     } else {
       getImages({ per_page, page });
     }
-  }, [per_page, page, q, getImages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, per_page, q]);
 
   const handleLoarMore = () => {
     setPage(prevState => prevState + 1);

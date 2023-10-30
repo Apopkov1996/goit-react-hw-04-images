@@ -7,6 +7,7 @@ import { fetchPhotos } from 'Services/api';
 import { Loader } from 'components/Loader/Loader';
 import { toast } from 'react-toastify';
 import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
 
 export const App = () => {
   // state = {
@@ -24,74 +25,52 @@ export const App = () => {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
-  const [per_page, setPer_page] = useState(12);
+  const [per_page] = useState(12);
   const [q, setQ] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [total, setTotal] = useState(0);
   const [imageModal, setImageModal] = useState(null);
 
-  // componentDidMount() {
-  //   const { per_page, page } = this.state;
-  //   this.getImages({ per_page, page });
-  // }
+  const getImages = useCallback(
+    async params => {
+      setLoading(true);
+      try {
+        const data = await fetchPhotos(params);
 
-  useEffect(() => {
-    getImages({ per_page, page });
-  }, [per_page, page]);
+        const { hits, totalHits } = data;
 
-  // componentDidUpdate(_, prevState) {
-  //   const { per_page, page, q } = this.state;
-  //   if (this.state.q !== prevState.q || this.state.page !== prevState.page) {
-  //     this.getImages({ per_page, page, q });
-  //   }
-  // }
+        if (hits.length === 0) {
+          return toast.warning(
+            `Sorry, we could not find any images matching your request`
+          );
+        } else {
+          !total && toast.success(`We found ${totalHits} images`);
+        }
 
-  useEffect(() => {
-    if (!q || !page) {
-      getImages({ per_page, page, q });
-    }
-  }, [per_page, page, q]);
-
-  const getImages = async params => {
-    setLoading(true);
-    try {
-      const data = await fetchPhotos(params);
-
-      const { hits, totalHits } = data;
-
-      if (hits.length === 0) {
-        return toast.warning(
-          `Sorry, we could not find any images matching your request`
-        );
-      } else {
-        !total && toast.success(`We found ${totalHits} images`);
+        setImages(prevState => [...prevState, ...hits]);
+        setTotal(totalHits);
+      } catch (error) {
+        toast.warning(`Oops ${error}`);
+      } finally {
+        setLoading(false);
       }
+    },
+    [total]
+  );
 
-      // this.setState(prevState => ({
-      //   images: [...prevState.images, ...hits],
-      // }));
-
-      setImages(prevState => [...prevState, ...hits]);
-      setTotal(totalHits);
-    } catch (error) {
-      toast.warning(`Oops ${error}`);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (q) {
+      getImages({ per_page, page, q });
+    } else {
+      getImages({ per_page, page });
     }
-  };
+  }, [per_page, page, q, getImages]);
 
   const handleLoarMore = () => {
     setPage(prevState => prevState + 1);
   };
 
   const handleSubmit = query => {
-    // this.setState({
-    //   q: query,
-    //   images: [],
-    //   Page: 1,
-    //   total: 0,
-    // });
-
     setQ(query);
     setImages([]);
     setPage(1);
@@ -99,11 +78,6 @@ export const App = () => {
   };
 
   const handleOpenModal = largeImageURL => {
-    // this.setState(prevState => ({
-    //   isOpen: !prevState.isOpen,
-    //   imageModal: largeImageURL,
-    // }));
-
     setIsOpen(prevState => !prevState);
     setImageModal(largeImageURL);
   };

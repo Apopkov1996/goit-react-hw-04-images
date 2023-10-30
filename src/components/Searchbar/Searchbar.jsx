@@ -10,9 +10,6 @@ import { toast } from 'react-toastify';
 import { useState } from 'react';
 
 export const Searchbar = ({ globalQuery, onSubmit }) => {
-  // state = {
-  //   query: '',
-  // };
   const [query, setQuery] = useState('');
 
   const handleChange = e => {

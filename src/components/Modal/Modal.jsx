@@ -1,38 +1,40 @@
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
+import { useEffect } from 'react';
+import { useCallback } from 'react';
 
-export class Modal extends React.Component {
-  componentDidMount() {
-    document.addEventListener('keydown', this.handleCloseKeyDown);
+export const Modal = ({ close, children }) => {
+  const handleCloseKeyDown = useCallback(
+    e => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    },
+    [close]
+  );
+  useEffect(() => {
+    document.addEventListener('keydown', handleCloseKeyDown);
     document.body.style.overflow = 'hidden';
-  }
 
-  componentWillUnmount() {
-    document.body.style.overflow = 'auto';
-    document.removeEventListener('keydown', this.handleCloseKeyDown);
-  }
+    return () => {
+      document.removeEventListener('keydown', handleCloseKeyDown);
+      document.body.style.overflow = 'auto';
+    };
+  }, [handleCloseKeyDown]);
 
-  handleCloseKeyDown = e => {
-    if (e.key === 'Escape') {
-      this.props.close();
-    }
-  };
-
-  handleClick = ({ target, currentTarget }) => {
+  const handleClick = ({ target, currentTarget }) => {
     if (target === currentTarget) {
-      this.props.close();
+      close();
     }
   };
 
-  render() {
-    return (
-      <StyledOverlay onClick={this.handleClick}>
-        <StyledModal>{this.props.children}</StyledModal>
-      </StyledOverlay>
-    );
-  }
-}
+  return (
+    <StyledOverlay onClick={handleClick}>
+      <StyledModal>{children}</StyledModal>
+    </StyledOverlay>
+  );
+};
 
 const StyledOverlay = styled.div`
   position: fixed;

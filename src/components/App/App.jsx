@@ -10,18 +10,6 @@ import { useState, useEffect } from 'react';
 import { useCallback } from 'react';
 
 export const App = () => {
-  // state = {
-  //   loading: false,
-  //   error: null,
-  //   images: [],
-  //   page: 1,
-  //   per_page: 12,
-  //   q: '',
-  //   isOpen: false,
-  //   total: 0,
-  //   imageModal: null,
-  // };
-
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
